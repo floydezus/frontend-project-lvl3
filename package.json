@@ -32,8 +32,14 @@
     "html-webpack-plugin": "^5.3.1",
     "jest": "^27.0.4",
     "jest-cli": "^27.0.4",
+    "lodash": "^4.17.21",
+    "on-change": "^3.0.2",
     "webpack": "^5.39.1",
     "webpack-cli": "^4.7.2",
-    "webpack-dev-server": "^3.11.2"
+    "webpack-dev-server": "^3.11.2",
+    "yup": "^0.32.9"
+  },
+  "dependencies": {
+    "axios": "^0.21.1"
   }
 }
