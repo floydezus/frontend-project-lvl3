@@ -51,6 +51,7 @@ const submitButton = document.querySelector('button[type="submit"]');
 const inputUrl = document.querySelector('#urlInput');
 const divURL = document.querySelector('#divUrl');
 const divFeeds = document.querySelector('.feeds');
+const divPosts = document.querySelector('.posts');
 
 const renderErrors = (element, errors) => { //refactoring
   const elementError =  element;
@@ -90,6 +91,51 @@ const processStateHandler = (processState) => {
   }
 };
 
+const renderPosts = (postsObj, rootPosts) => {
+  rootPosts.innerHTML = '';
+  const cardPosts = document.createElement('div');
+  cardPosts.classList.add('card', 'border-0');
+  rootPosts.appendChild(cardPosts);
+  const bodyPosts = document.createElement('div');
+  bodyPosts.classList.add('card-body');
+  cardPosts.appendChild(bodyPosts);
+  const titlePosts = document.createElement('h2');
+  titlePosts.classList.add('card-title');
+  titlePosts.textContent = 'Посты';
+  bodyPosts.appendChild(titlePosts);
+  const groupListPosts = document.createElement('ul');
+  groupListPosts.classList.add('list-group');
+  cardPosts.appendChild(groupListPosts);
+  
+  postsObj.forEach((obj) => {
+    const { posts } = obj;
+    posts.forEach(({title, link}) => {
+
+      const listItem = document.createElement('li');
+      listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+      groupListPosts.appendChild(listItem);
+      const id = _.uniqueId();
+      const linkElem = document.createElement('a');
+      linkElem.classList.add('fw-bold');
+      linkElem.href = link;
+      linkElem.textContent = title;
+      linkElem.setAttribute("data-id", id);
+      listItem.appendChild(linkElem);
+
+      const buttonElem = document.createElement('button');
+      buttonElem.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+      buttonElem.textContent = 'Просмотр';
+      buttonElem.setAttribute("data-id", id);
+      buttonElem.setAttribute("data-bs-toggle", "modal");
+      buttonElem.setAttribute("data-bs-target", "#modal");
+      listItem.appendChild(buttonElem);
+
+    });
+
+  });
+
+};
+
 const renderFeeds = (feeds, rootFeeds) => {
   rootFeeds.innerHTML = '';
   const cardFeeds = document.createElement('div');
@@ -100,16 +146,14 @@ const renderFeeds = (feeds, rootFeeds) => {
   cardFeeds.appendChild(bodyFeeds);
   const titleFeeds = document.createElement('h2');
   titleFeeds.classList.add('card-title');
-  titleFeeds.textContent = 'Feeds';
+  titleFeeds.textContent = 'Фиды';
   bodyFeeds.appendChild(titleFeeds);
   const groupListFeeds = document.createElement('ul');
   groupListFeeds.classList.add('list-group');
   cardFeeds.appendChild(groupListFeeds);
 
   feeds.forEach(({title, description }) => {
-    console.log(`TITO ${title}`);
-    console.log(`TITO ${description}`);
-      
+          
     const listItem = document.createElement('li');
     listItem.classList.add('list-group-item', 'border-0');
     groupListFeeds.appendChild(listItem);
@@ -149,9 +193,8 @@ const watchedState = onChange(state, (path, value) => {
         //console.log('feeds');
         renderFeeds(value, divFeeds);
         break;
-      case 'dataRss.posts':
-        console.log('posts');
-        //renderPosts(value);
+      case 'dataRss.posts':        
+        renderPosts(value, divPosts);
         break;  
       default:
         break;
@@ -173,8 +216,8 @@ const writeData = (data, currentUrl) => {
   const {title, description, items} = data;  
   console.log(items);
   const id = _.uniqueId();
-  watchedState.dataRss.feeds.push({id: id, title: title, description: description, url: currentUrl });
-  watchedState.dataRss.posts.push({id: id, posts: items });
+  watchedState.dataRss.feeds.unshift({id: id, title: title, description: description, url: currentUrl });
+  watchedState.dataRss.posts.unshift({id: id, posts: items });
 };
 
 formSubmit.addEventListener('submit', (e) => {
