@@ -4,7 +4,9 @@ export default (data) => {
   // console.log(doc);
   const parseError = doc.querySelector('parsererror');
   if (parseError) {
-    throw new Error(`Parse error: ${parseError}`);
+    const error = new Error(`Parse error: ${parseError}`);
+    error.isParsingError = true;
+    throw error;
   }
   // console.log('after throw');
   const result = {};
@@ -19,7 +21,5 @@ export default (data) => {
   }));
   // .map((el) => el.textContent);
   result.items = mappedItems;
-  console.log(`Title ${result.title}`);
-  console.log(`Description ${result.description}`);
   return result;
 };

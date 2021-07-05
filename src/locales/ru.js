@@ -16,11 +16,12 @@ export default {
     },
     messages: {
       errors: {
-        required: 'url обязательное для заполнения',
-        validation: 'url поле должно быть валидным URL',
-        invalidrss: 'Ресурс не содержит валидный RSS',
+        required: 'Не должно быть пустым',
+        url: 'Ссылка должна быть валидным URL',
+        parsing: 'Ресурс не содержит валидный RSS',
         network: 'Сетевая ошибка. Попробуйте снова',
-        exist: 'RSS уже существует',
+        notOneOf: 'RSS уже существует',
+        undefined: 'Неизвестная ошибка!',
       },
       success: {
         add: 'RSS успешно загружен',

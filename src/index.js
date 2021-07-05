@@ -14,7 +14,7 @@ const app = async () => {
       valid: false,
       process: 'filling',
       processError: null,
-      errors: {},
+      error: null,
     },
     dataRss: {
       feeds: [],
@@ -32,38 +32,17 @@ const app = async () => {
     resources,
   });
 
-  yup.setLocale({
-    mixed: {
-      required: i18nInstance.t('messages.errors.required'),
-    },
-    string: {
-      url: i18nInstance.t('messages.errors.validation'),
-    },
-  });
+  const baseURLSchema = yup.string().required().url();
 
-  const schema = yup.object().shape({
-    url: yup.string().required().url(),
-  });
-
-  const validateURL = (fields) => {
+  const validateURL = (url, feeds) => {
+    const urls = feeds.map((el) => el.url);
+    const currentURLSchema = baseURLSchema.notOneOf(urls);
     try {
-      schema.validateSync(fields, { abortEarly: false });
-      return {};
-    } catch (e) {
-      // console.log('CATCH ERRORS');
-      return _.keyBy(e.inner, 'path');
+      currentURLSchema.validateSync(url);
+      return null;
+    } catch (err) {
+      return err.type;
     }
-  };
-
-  const errorMessages = {
-    network: {
-      // error: 'Network Problems. Try again.',
-      error: i18nInstance.t('messages.errors.network'),
-    },
-    parsing: {
-      // error: 'Ресурс не содержит валидный RSS.',
-      error: i18nInstance.t('messages.errors.invalidrss'),
-    },
   };
 
   const formSubmit = document.querySelector('.rss-form');
@@ -73,22 +52,25 @@ const app = async () => {
   const divFeeds = document.querySelector('.feeds');
   const divPosts = document.querySelector('.posts');
 
-  const renderErrors = (element, errors) => { // refactoring
-    const elementError = element;
-    const error = errors[elementError.name];
-    // console.log(error);
-    const feedbackError = divURL.querySelector('.feedback');
-    if (feedbackError) {
-      feedbackError.remove();
-      elementError.classList.remove('is-invalid');
-    }
-    if (!error) {
-      return;
+  const renderMessage = (element, messageType, isSuccess = true) => { // refactoring
+    const feedbackExist = divURL.querySelector('.feedback');
+    const elementMessage = element;
+    if (feedbackExist) {
+      feedbackExist.remove();
+      elementMessage.classList.remove('is-invalid');
     }
     const feedbackElement = document.createElement('div');
-    feedbackElement.classList.add('feedback', 'text-danger', 'position-absolute', 'small');
-    feedbackElement.innerHTML = error.message;
-    elementError.classList.add('is-invalid');
+    if (isSuccess) {
+      const message = i18nInstance.t(`messages.${messageType}`);
+      feedbackElement.classList.add('feedback', 'text-success', 'position-absolute', 'small');
+      feedbackElement.innerHTML = message;
+    } else {
+      console.log(messageType);
+      const errorMessage = i18nInstance.t([`messages.errors.${messageType}`, 'messages.errors.undefined']);
+      feedbackElement.classList.add('feedback', 'text-danger', 'position-absolute', 'small');
+      feedbackElement.innerHTML = errorMessage;
+      elementMessage.classList.add('is-invalid');
+    }
     divURL.appendChild(feedbackElement);
   };
 
@@ -102,6 +84,8 @@ const app = async () => {
         break;
       case 'accepted':
         submitButton.disabled = false;
+        inputUrl.value = '';
+        renderMessage(inputUrl, 'success.add');
         break;
       case 'sending':
         submitButton.disabled = true;
@@ -189,14 +173,14 @@ const app = async () => {
 
   const watchedState = onChange(state, (path, value) => {
     switch (path) {
-      case 'inputRSSForm.errors':
-        renderErrors(inputUrl, value);
+      case 'inputRSSForm.error':
+        renderMessage(inputUrl, value, false);
         break;
       case 'inputRSSForm.processError':
-      // renderErrors(inputUrl, value);
+        renderMessage(inputUrl, value, false);
         break;
       case 'inputRSSForm.valid':
-      // submit.disabled = false;
+        submitButton.disabled = false;
         break;
       case 'inputRSSForm.process':
         processStateHandler(value);
@@ -210,14 +194,7 @@ const app = async () => {
       default:
         break;
     }
-    console.log(state);
   });
-
-  const updateValidationState = (url) => {
-    const errors = validateURL({ url });
-    watchedState.inputRSSForm.valid = _.isEqual(errors, {});
-    watchedState.inputRSSForm.errors = errors;
-  };
 
   const writeData = (data, currentUrl) => {
     const repeatUrl = watchedState.dataRss.feeds.filter((el) => el.url === currentUrl);
@@ -225,7 +202,6 @@ const app = async () => {
       throw new Error(i18nInstance.t('messages.errors.exist'));
     }
     const { title, description, items } = data;
-    console.log(items);
     const id = _.uniqueId();
     watchedState.dataRss.feeds.unshift({
       id, title, description, url: currentUrl,
@@ -237,20 +213,29 @@ const app = async () => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const url = formData.get('url');
-    updateValidationState(url);
+    const error = validateURL(url, watchedState.dataRss.feeds);
+    if (error) {
+      watchedState.inputRSSForm.error = error;
+      watchedState.inputRSSForm.valid = false;
+      return;
+    }
+    watchedState.inputRSSForm.valid = true;
+    watchedState.inputRSSForm.error = null;
     watchedState.inputRSSForm.process = 'sending';
     axios.get(`${proxyServ}${encodeURIComponent(url)}`)
       .then((response) => {
       // handle success
         const content = parser(response.data.contents);
-        console.log(content);
         writeData(content, url);
         watchedState.inputRSSForm.process = 'accepted'; // success info?
       })
-      .catch((error) => {
-      //       // handle error
-        console.log(`handle error ${error}`);
-        watchedState.inputRSSForm.processError = errorMessages.network.error;
+      .catch((err) => {
+        if (err.isAxiosError) {
+          watchedState.inputRSSForm.processError = 'network';
+        }
+        if (err.isParsingError) {
+          watchedState.inputRSSForm.processError = 'parsing';
+        }
         watchedState.inputRSSForm.process = 'failed';
       });
   });
