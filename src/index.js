@@ -22,6 +22,8 @@ const app = async () => {
     },
   };
 
+  const clickedLinks = [];
+
   const defaultLanguage = 'ru';
   // каждый запуск приложения создаёт свой собственный объект i18n и работает с ним,
   // не меняя глобальный объект.
@@ -51,6 +53,9 @@ const app = async () => {
   const divURL = document.querySelector('#divUrl');
   const divFeeds = document.querySelector('.feeds');
   const divPosts = document.querySelector('.posts');
+  const titleModal = document.querySelector('.modal-title');
+  const bodyModal = document.querySelector('.modal-body');
+  const buttonModal = document.querySelector('.modal-footer .btn-primary');
 
   const renderMessage = (element, messageType, isSuccess = true) => { // refactoring
     const feedbackExist = divURL.querySelector('.feedback');
@@ -114,17 +119,29 @@ const app = async () => {
 
     postsObj.forEach((obj) => {
       const { posts } = obj;
-      posts.forEach(({ title, link }) => {
+      posts.forEach(({ title, description, link }) => {
         const listItem = document.createElement('li');
         listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
         groupListPosts.appendChild(listItem);
         const id = _.uniqueId();
         const linkElem = document.createElement('a');
-        linkElem.classList.add('fw-bold');
+        if (clickedLinks.includes(link)) {
+          linkElem.classList.add('fw-normal');
+          linkElem.classList.add('link-secondary');
+        } else {
+          linkElem.classList.add('fw-bold');
+        }
         linkElem.href = link;
         linkElem.textContent = title;
         linkElem.setAttribute('data-id', id);
         listItem.appendChild(linkElem);
+
+        linkElem.addEventListener('click', () => {
+          linkElem.classList.remove('fw-bold');
+          linkElem.classList.add('fw-normal');
+          linkElem.classList.add('link-secondary');
+          clickedLinks.unshift(link);
+        });
 
         const buttonElem = document.createElement('button');
         buttonElem.classList.add('btn', 'btn-outline-primary', 'btn-sm');
@@ -133,8 +150,30 @@ const app = async () => {
         buttonElem.setAttribute('data-bs-toggle', 'modal');
         buttonElem.setAttribute('data-bs-target', '#modal');
         listItem.appendChild(buttonElem);
+
+        buttonElem.addEventListener('click', () => {
+          titleModal.textContent = title;
+          bodyModal.textContent = description;
+          buttonModal.setAttribute('href', link);
+          clickedLinks.unshift(link);
+          linkElem.classList.remove('fw-bold');
+          linkElem.classList.add('fw-normal');
+          linkElem.classList.add('link-secondary');
+          console.log(clickedLinks);
+        });
       });
     });
+
+    // const buttonsForView = divPosts.querySelectorAll('[data-bs-toggle="modal"]');
+
+    // console.log(`BUTTONS FOR VIEW${buttonsForView}`);
+    // buttonsForView.forEach((element) => {
+    //   element.addEventListener('click', (e) => {
+    //     const curId = element.getAttribute('data-id');
+    //     console.log(`BUTTONS FOR VIEW${e.target}`);
+    //     headerTitle.textContent = ;
+    //   });
+    // });
   };
 
   const renderFeeds = (feeds, rootEl) => {
@@ -209,6 +248,28 @@ const app = async () => {
     watchedState.dataRss.posts.unshift({ id, posts: items });
   };
 
+  const updateData = () => {
+    const promisesFeed = watchedState.dataRss.feeds.map(({ url }) => axios.get(`${proxyServ}${encodeURIComponent(url)}`)
+      .then((response) => ({ result: 'success', value: parser(response.data.contents) }))
+      .catch((error) => ({ result: 'error', error })));
+
+    const promise = Promise.all(promisesFeed);
+
+    promise.then((contents) => contents.map(({ value }) => {
+      watchedState.dataRss.feeds.map((item) => {
+        if ((item.title === value.title) && (item.items.length !== value.items.length)) {
+          // writeData();
+        }
+        return item;
+      });
+    }));
+
+    setTimeout(() => {
+      console.log('update');
+      updateData();
+    }, 5000);
+  };
+
   formSubmit.addEventListener('submit', (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -228,6 +289,7 @@ const app = async () => {
         const content = parser(response.data.contents);
         writeData(content, url);
         watchedState.inputRSSForm.process = 'accepted'; // success info?
+        updateData(); //  trying update
       })
       .catch((err) => {
         if (err.isAxiosError) {
