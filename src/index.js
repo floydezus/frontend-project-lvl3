@@ -3,7 +3,7 @@ import * as yup from 'yup';
 import onChange from 'on-change';
 import _ from 'lodash';
 import i18n from 'i18next';
-import parser from './parser.js';
+import parse from './parser.js';
 import resources from './locales';
 
 const proxyServ = 'https://hexlet-allorigins.herokuapp.com/get?url=';
@@ -16,13 +16,15 @@ const app = async () => {
       processError: null,
       error: null,
     },
-    dataRss: {
-      feeds: [],
-      posts: [],
+    ui: {
+      seenLinks: [],
     },
+    feeds: [],
+    posts: [],
   };
 
   const clickedLinks = [];
+  const delayTime = 5000;
 
   const defaultLanguage = 'ru';
   // каждый запуск приложения создаёт свой собственный объект i18n и работает с ним,
@@ -100,7 +102,7 @@ const app = async () => {
     }
   };
 
-  const renderPosts = (postsObj, rootEl) => {
+  const renderPosts = (posts, rootEl) => {
     const rootPosts = rootEl;
     rootPosts.innerHTML = '';
     const cardPosts = document.createElement('div');
@@ -117,63 +119,49 @@ const app = async () => {
     groupListPosts.classList.add('list-group');
     cardPosts.appendChild(groupListPosts);
 
-    postsObj.forEach((obj) => {
-      const { posts } = obj;
-      posts.forEach(({ title, description, link }) => {
-        const listItem = document.createElement('li');
-        listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
-        groupListPosts.appendChild(listItem);
-        const id = _.uniqueId();
-        const linkElem = document.createElement('a');
-        if (clickedLinks.includes(link)) {
-          linkElem.classList.add('fw-normal');
-          linkElem.classList.add('link-secondary');
-        } else {
-          linkElem.classList.add('fw-bold');
-        }
-        linkElem.href = link;
-        linkElem.textContent = title;
-        linkElem.setAttribute('data-id', id);
-        listItem.appendChild(linkElem);
+    posts.forEach(({ title, description, link }) => {
+      const listItem = document.createElement('li');
+      listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+      groupListPosts.appendChild(listItem);
+      const id = _.uniqueId();
+      const linkElem = document.createElement('a');
+      if (clickedLinks.includes(link)) {
+        linkElem.classList.add('fw-normal');
+        linkElem.classList.add('link-secondary');
+      } else {
+        linkElem.classList.add('fw-bold');
+      }
+      linkElem.href = link;
+      linkElem.textContent = title;
+      linkElem.setAttribute('data-id', id);
+      listItem.appendChild(linkElem);
 
-        linkElem.addEventListener('click', () => {
-          linkElem.classList.remove('fw-bold');
-          linkElem.classList.add('fw-normal');
-          linkElem.classList.add('link-secondary');
-          clickedLinks.unshift(link);
-        });
+      linkElem.addEventListener('click', () => {
+        linkElem.classList.remove('fw-bold');
+        linkElem.classList.add('fw-normal');
+        linkElem.classList.add('link-secondary');
+        clickedLinks.unshift(link);
+      });
 
-        const buttonElem = document.createElement('button');
-        buttonElem.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-        buttonElem.textContent = i18nInstance.t('interface.buttons.view');
-        buttonElem.setAttribute('data-id', id);
-        buttonElem.setAttribute('data-bs-toggle', 'modal');
-        buttonElem.setAttribute('data-bs-target', '#modal');
-        listItem.appendChild(buttonElem);
+      const buttonElem = document.createElement('button');
+      buttonElem.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+      buttonElem.textContent = i18nInstance.t('interface.buttons.view');
+      buttonElem.setAttribute('data-id', id);
+      buttonElem.setAttribute('data-bs-toggle', 'modal');
+      buttonElem.setAttribute('data-bs-target', '#modal');
+      listItem.appendChild(buttonElem);
 
-        buttonElem.addEventListener('click', () => {
-          titleModal.textContent = title;
-          bodyModal.textContent = description;
-          buttonModal.setAttribute('href', link);
-          clickedLinks.unshift(link);
-          linkElem.classList.remove('fw-bold');
-          linkElem.classList.add('fw-normal');
-          linkElem.classList.add('link-secondary');
-          console.log(clickedLinks);
-        });
+      buttonElem.addEventListener('click', () => {
+        titleModal.textContent = title;
+        bodyModal.textContent = description;
+        buttonModal.setAttribute('href', link);
+        clickedLinks.unshift(link);
+        linkElem.classList.remove('fw-bold');
+        linkElem.classList.add('fw-normal');
+        linkElem.classList.add('link-secondary');
+        console.log(clickedLinks);
       });
     });
-
-    // const buttonsForView = divPosts.querySelectorAll('[data-bs-toggle="modal"]');
-
-    // console.log(`BUTTONS FOR VIEW${buttonsForView}`);
-    // buttonsForView.forEach((element) => {
-    //   element.addEventListener('click', (e) => {
-    //     const curId = element.getAttribute('data-id');
-    //     console.log(`BUTTONS FOR VIEW${e.target}`);
-    //     headerTitle.textContent = ;
-    //   });
-    // });
   };
 
   const renderFeeds = (feeds, rootEl) => {
@@ -224,10 +212,13 @@ const app = async () => {
       case 'inputRSSForm.process':
         processStateHandler(value);
         break;
-      case 'dataRss.feeds':
+      case 'feeds':
         renderFeeds(value, divFeeds);
         break;
-      case 'dataRss.posts':
+      case 'posts':
+        renderPosts(value, divPosts);
+        break;
+      case 'ui.seenLinks':
         renderPosts(value, divPosts);
         break;
       default:
@@ -236,45 +227,46 @@ const app = async () => {
   });
 
   const writeData = (data, currentUrl) => {
-    const repeatUrl = watchedState.dataRss.feeds.filter((el) => el.url === currentUrl);
-    if (!_.isEqual(repeatUrl, [])) {
-      throw new Error(i18nInstance.t('messages.errors.exist'));
-    }
     const { title, description, items } = data;
-    const id = _.uniqueId();
-    watchedState.dataRss.feeds.unshift({
-      id, title, description, url: currentUrl,
+    const idFeed = _.uniqueId();
+    watchedState.feeds.unshift({
+      id: idFeed, title, description, url: currentUrl,
     });
-    watchedState.dataRss.posts.unshift({ id, posts: items });
+    const posts = items.map((i) => ({ ...i, id: _.uniqueId(), idFeed }));
+    watchedState.posts.unshift(...posts);
   };
 
   const updateData = () => {
-    const promisesFeed = watchedState.dataRss.feeds.map(({ url }) => axios.get(`${proxyServ}${encodeURIComponent(url)}`)
-      .then((response) => ({ result: 'success', value: parser(response.data.contents) }))
-      .catch((error) => ({ result: 'error', error })));
-
-    const promise = Promise.all(promisesFeed);
-
-    promise.then((contents) => contents.map(({ value }) => {
-      watchedState.dataRss.feeds.map((item) => {
-        if ((item.title === value.title) && (item.items.length !== value.items.length)) {
-          // writeData();
+    const promisesFeed = watchedState.feeds.map((feed) => axios.get(`${proxyServ}${encodeURIComponent(feed.url)}`)
+      .then((response) => {
+        const feedData = parse(response.data.contents);
+        const newPosts = feedData.items;
+        const oldPost = watchedState.posts.filter((el) => el.idFeed === feed.id);
+        const diffTitle = _.difference(newPosts.map((post) => post.title),
+          oldPost.map((post) => post.title));
+        if (diffTitle.length !== 0) {
+          console.log(diffTitle);
+          const addedPosts = newPosts.filter((post) => diffTitle.includes(post.title))
+            .map((i) => ({ ...i, id: _.uniqueId(), idFeed: feed.id }));
+          watchedState.posts.unshift(...addedPosts);
         }
-        return item;
-      });
-    }));
+      })
+      .catch((err) => console.log(err)));
 
-    setTimeout(() => {
-      console.log('update');
-      updateData();
-    }, 5000);
+    Promise.all(promisesFeed)
+      .finally(() => {
+        setTimeout(() => {
+          console.log('update');
+          updateData();
+        }, delayTime);
+      });
   };
 
   formSubmit.addEventListener('submit', (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const url = formData.get('url');
-    const error = validateURL(url, watchedState.dataRss.feeds);
+    const error = validateURL(url, watchedState.feeds);
     if (error) {
       watchedState.inputRSSForm.error = error;
       watchedState.inputRSSForm.valid = false;
@@ -286,7 +278,7 @@ const app = async () => {
     axios.get(`${proxyServ}${encodeURIComponent(url)}`)
       .then((response) => {
       // handle success
-        const content = parser(response.data.contents);
+        const content = parse(response.data.contents);
         writeData(content, url);
         watchedState.inputRSSForm.process = 'accepted'; // success info?
         updateData(); //  trying update
