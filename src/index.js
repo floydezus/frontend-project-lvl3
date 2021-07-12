@@ -23,7 +23,6 @@ const app = async () => {
     posts: [],
   };
 
-  const clickedLinks = [];
   const delayTime = 5000;
 
   const defaultLanguage = 'ru';
@@ -102,7 +101,7 @@ const app = async () => {
     }
   };
 
-  const renderPosts = (posts, rootEl) => {
+  const renderPosts = (posts, rootEl, wState) => {
     const rootPosts = rootEl;
     rootPosts.innerHTML = '';
     const cardPosts = document.createElement('div');
@@ -119,13 +118,14 @@ const app = async () => {
     groupListPosts.classList.add('list-group');
     cardPosts.appendChild(groupListPosts);
 
-    posts.forEach(({ title, description, link }) => {
+    posts.forEach(({
+      title, description, link, id,
+    }) => {
       const listItem = document.createElement('li');
       listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
       groupListPosts.appendChild(listItem);
-      const id = _.uniqueId();
       const linkElem = document.createElement('a');
-      if (clickedLinks.includes(link)) {
+      if (wState.ui.seenLinks.includes(id)) { // ????
         linkElem.classList.add('fw-normal');
         linkElem.classList.add('link-secondary');
       } else {
@@ -137,10 +137,7 @@ const app = async () => {
       listItem.appendChild(linkElem);
 
       linkElem.addEventListener('click', () => {
-        linkElem.classList.remove('fw-bold');
-        linkElem.classList.add('fw-normal');
-        linkElem.classList.add('link-secondary');
-        clickedLinks.unshift(link);
+        wState.ui.seenLinks.unshift(id);
       });
 
       const buttonElem = document.createElement('button');
@@ -155,11 +152,7 @@ const app = async () => {
         titleModal.textContent = title;
         bodyModal.textContent = description;
         buttonModal.setAttribute('href', link);
-        clickedLinks.unshift(link);
-        linkElem.classList.remove('fw-bold');
-        linkElem.classList.add('fw-normal');
-        linkElem.classList.add('link-secondary');
-        console.log(clickedLinks);
+        wState.ui.seenLinks.unshift(id);
       });
     });
   };
@@ -198,6 +191,16 @@ const app = async () => {
     });
   };
 
+  const renderSeenLink = (seenIds, wState) => {
+    const seenPosts = wState.posts.filter((post) => seenIds.includes(post.id));
+    seenPosts.forEach((post) => {
+      const linkElem = divPosts.querySelector(`a[data-id="${post.id}"]`);
+      linkElem.classList.remove('fw-bold');
+      linkElem.classList.add('fw-normal');
+      linkElem.classList.add('link-secondary');
+    });
+  };
+
   const watchedState = onChange(state, (path, value) => {
     switch (path) {
       case 'inputRSSForm.error':
@@ -216,10 +219,10 @@ const app = async () => {
         renderFeeds(value, divFeeds);
         break;
       case 'posts':
-        renderPosts(value, divPosts);
+        renderPosts(value, divPosts, watchedState);
         break;
       case 'ui.seenLinks':
-        renderPosts(value, divPosts);
+        renderSeenLink(value, watchedState);
         break;
       default:
         break;
