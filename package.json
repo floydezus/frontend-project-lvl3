@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest --colors",
     "dev": "webpack --mode development",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "lint": "eslint  --fix"
   },
   "repository": {
     "type": "git",
@@ -47,7 +48,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npx  eslint  --fix ."    
+      "pre-commit": "npm run lint"    
     }
   }
 }
