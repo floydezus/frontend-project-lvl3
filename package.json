@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "test": "jest --colors",
-    "dev": "webpack --mode development"
+    "dev": "webpack --mode development",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
@@ -43,5 +44,10 @@
     "lodash": "^4.17.21",
     "on-change": "^3.0.2",
     "yup": "^0.32.9"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npx  eslint  --fix ."    
+    }
   }
 }

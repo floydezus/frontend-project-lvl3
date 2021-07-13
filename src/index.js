@@ -13,6 +13,7 @@ const app = async () => {
     inputRSSForm: {
       valid: false,
       process: 'filling',
+      
       processError: null,
       error: null,
     },
