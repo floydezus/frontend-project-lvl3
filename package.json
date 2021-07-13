@@ -7,7 +7,7 @@
     "test": "jest --colors",
     "dev": "webpack --mode development",
     "prepare": "husky install",
-    "lint": "eslint  --fix"
+    "lint": "eslint  --fix ."
   },
   "repository": {
     "type": "git",
