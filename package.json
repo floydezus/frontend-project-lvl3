@@ -2,7 +2,7 @@
   "name": "@hexlet/code",
   "version": "1.0.0",
   "description": "simply RSS agregator",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "jest --colors",
     "dev": "webpack --mode development"
@@ -30,11 +30,12 @@
     "eslint-plugin-import": "^2.23.4",
     "eslint-plugin-jest": "^24.3.6",
     "html-webpack-plugin": "^5.3.1",
+    "husky": "^7.0.1",
     "jest": "^27.0.4",
-    "jest-cli": "^27.0.4",    
+    "jest-cli": "^27.0.4",
     "webpack": "^5.39.1",
     "webpack-cli": "^4.7.2",
-    "webpack-dev-server": "^3.11.2"    
+    "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
     "axios": "^0.21.1",
