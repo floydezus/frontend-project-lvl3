@@ -1,3 +1,6 @@
+/* eslint no-param-reassign: ["error", { "props": true,
+"ignorePropertyModificationsFor": ["wState"] }] */
+
 import axios from 'axios';
 import * as yup from 'yup';
 import onChange from 'on-change';
@@ -9,22 +12,23 @@ import resources from './locales';
 const proxyServ = 'https://hexlet-allorigins.herokuapp.com/get?url=';
 
 const app = async () => {
+  console.log('AAPPPP');
   const state = {
     inputRSSForm: {
       valid: false,
       process: 'filling',
-
-      processError: null,
       error: null,
     },
     ui: {
       seenLinks: [],
+      currentLink: {},
     },
+    processError: null,
     feeds: [],
     posts: [],
   };
 
-  const delayTime = 5000
+  const delayTime = 5000;
 
   const defaultLanguage = 'ru';
   // каждый запуск приложения создаёт свой собственный объект i18n и работает с ним,
@@ -150,9 +154,7 @@ const app = async () => {
       listItem.appendChild(buttonElem);
 
       buttonElem.addEventListener('click', () => {
-        titleModal.textContent = title;
-        bodyModal.textContent = description;
-        buttonModal.setAttribute('href', link);
+        wState.ui.currentLink = { title, description, link };
         wState.ui.seenLinks.unshift(id);
       });
     });
@@ -202,12 +204,18 @@ const app = async () => {
     });
   };
 
+  const renderModal = (data) => {
+    titleModal.textContent = data.title;
+    bodyModal.textContent = data.description;
+    buttonModal.setAttribute('href', data.link);
+  };
+
   const watchedState = onChange(state, (path, value) => {
     switch (path) {
       case 'inputRSSForm.error':
         renderMessage(inputUrl, value, false);
         break;
-      case 'inputRSSForm.processError':
+      case 'processError':
         renderMessage(inputUrl, value, false);
         break;
       case 'inputRSSForm.valid':
@@ -224,6 +232,9 @@ const app = async () => {
         break;
       case 'ui.seenLinks':
         renderSeenLink(value, watchedState);
+        break;
+      case 'ui.currentLink':
+        renderModal(value);
         break;
       default:
         break;
@@ -289,14 +300,14 @@ const app = async () => {
       })
       .catch((err) => {
         if (err.isAxiosError) {
-          watchedState.inputRSSForm.processError = 'network';
+          watchedState.processError = 'network';
         }
         if (err.isParsingError) {
-          watchedState.inputRSSForm.processError = 'parsing';
+          watchedState.processError = 'parsing';
         }
         watchedState.inputRSSForm.process = 'failed';
       });
   });
 };
 
-app();
+export default app;
