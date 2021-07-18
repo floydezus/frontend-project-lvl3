@@ -9,7 +9,7 @@ import i18n from 'i18next';
 import parse from './parser.js';
 import resources from './locales';
 
-const proxyServ = 'https://hexlet-allorigins.herokuapp.com/get?url=';
+const proxyServ = 'https://hexlet-allorigins.herokuapp.com/get?disableCache=true&url=';
 
 const app = async () => {
   console.log('AAPPPP');
