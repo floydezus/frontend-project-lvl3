@@ -1,6 +1,6 @@
 /* eslint no-param-reassign: ["error", { "props": true,
 "ignorePropertyModificationsFor": ["wState"] }] */
-
+import 'bootstrap';
 import axios from 'axios';
 import * as yup from 'yup';
 import onChange from 'on-change';
@@ -12,7 +12,6 @@ import resources from './locales';
 const proxyServ = 'https://hexlet-allorigins.herokuapp.com/get?disableCache=true&url=';
 
 const app = async () => {
-  console.log('AAPPPP');
   const state = {
     inputRSSForm: {
       valid: false,
