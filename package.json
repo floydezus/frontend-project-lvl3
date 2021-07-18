@@ -2,8 +2,7 @@
   "name": "@hexlet/code",
   "version": "1.0.0",
   "description": "simply RSS agregator",
-  "main": "src/index.js",
-  "bin": "bin.js",
+  "main": "src/app.js",
   "scripts": {
     "test": "jest --colors",
     "dev": "webpack --mode development",
