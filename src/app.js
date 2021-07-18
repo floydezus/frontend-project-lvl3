@@ -89,17 +89,20 @@ const app = async () => {
     switch (processState) {
       case 'failed':
         submitButton.disabled = false;
+        inputUrl.removeAttribute('readonly');
         break;
       case 'filling':
         submitButton.disabled = false;
         break;
       case 'accepted':
         submitButton.disabled = false;
+        inputUrl.removeAttribute('readonly');
         inputUrl.value = '';
         renderMessage(inputUrl, 'success.add');
         break;
       case 'sending':
         submitButton.disabled = true;
+        inputUrl.setAttribute('readonly', true);
         break;
       default:
         throw new Error(`Unknown state: ${processState}`);
