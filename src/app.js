@@ -9,7 +9,13 @@ import i18n from 'i18next';
 import parse from './parser.js';
 import resources from './locales';
 
-const proxyServ = 'https://hexlet-allorigins.herokuapp.com/get?disableCache=true&url=';
+const buildURL = (link) => {
+  const path = 'https://hexlet-allorigins.herokuapp.com/get';
+  const buildedUrl = new URL(path);
+  buildedUrl.searchParams.set('disableCache', true);
+  buildedUrl.searchParams.set('url', link);
+  return buildedUrl;
+};
 
 const app = async () => {
   const state = {
@@ -27,17 +33,24 @@ const app = async () => {
     posts: [],
   };
 
-  const delayTime = 5000 ;
+  const delayTime = 5000;
 
   const defaultLanguage = 'ru';
   // каждый запуск приложения создаёт свой собственный объект i18n и работает с ним,
   // не меняя глобальный объект.
+  // const i18nInstance = i18n.createInstance();
+  // await i18nInstance.init({
+  //   lng: defaultLanguage,
+  //   debug: false,
+  //   resources,
+  // });
   const i18nInstance = i18n.createInstance();
-  await i18nInstance.init({
+  i18nInstance.init({
     lng: defaultLanguage,
     debug: false,
     resources,
-  });
+  })
+    .then((response) => console.log(response));
 
   const baseURLSchema = yup.string().required().url();
 
@@ -254,7 +267,7 @@ const app = async () => {
   };
 
   const updateData = () => {
-    const promisesFeed = watchedState.feeds.map((feed) => axios.get(`${proxyServ}${encodeURIComponent(feed.url)}`)
+    const promisesFeed = watchedState.feeds.map((feed) => axios.get(buildURL(feed.url))
       .then((response) => {
         const feedData = parse(response.data.contents);
         const newPosts = feedData.items;
@@ -262,7 +275,7 @@ const app = async () => {
         const diffTitle = _.difference(newPosts.map((post) => post.title),
           oldPost.map((post) => post.title));
         if (diffTitle.length !== 0) {
-          console.log(diffTitle);
+          // console.log(diffTitle);
           const addedPosts = newPosts.filter((post) => diffTitle.includes(post.title))
             .map((i) => ({ ...i, id: _.uniqueId(), idFeed: feed.id }));
           watchedState.posts.unshift(...addedPosts);
@@ -273,7 +286,7 @@ const app = async () => {
     Promise.all(promisesFeed)
       .finally(() => {
         setTimeout(() => {
-          console.log('update');
+          // console.log('update');
           updateData();
         }, delayTime);
       });
@@ -292,7 +305,8 @@ const app = async () => {
     watchedState.inputRSSForm.valid = true;
     watchedState.inputRSSForm.error = null;
     watchedState.inputRSSForm.process = 'sending';
-    axios.get(`${proxyServ}${encodeURIComponent(url)}`)
+    // axios.get(`${proxyServ}${encodeURIComponent(url)}`)
+    axios.get(buildURL(url))
       .then((response) => {
       // handle success
         const content = parse(response.data.contents);
