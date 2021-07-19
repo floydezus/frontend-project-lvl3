@@ -27,7 +27,7 @@ const app = async () => {
     posts: [],
   };
 
-  const delayTime = 5000;
+  const delayTime = 5000 ;
 
   const defaultLanguage = 'ru';
   // каждый запуск приложения создаёт свой собственный объект i18n и работает с ним,
