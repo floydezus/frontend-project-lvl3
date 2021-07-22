@@ -17,7 +17,7 @@ const buildURL = (link) => {
   return buildedUrl;
 };
 
-const app = async () => {
+const app = () => {
   const state = {
     inputRSSForm: {
       valid: false,
@@ -26,7 +26,7 @@ const app = async () => {
     },
     ui: {
       seenLinks: [],
-      currentLink: {},
+      currentLink: null,
     },
     processError: null,
     feeds: [],
