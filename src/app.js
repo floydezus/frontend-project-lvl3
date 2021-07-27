@@ -1,7 +1,6 @@
 import 'bootstrap';
 import axios from 'axios';
 import * as yup from 'yup';
-// import onChange from 'on-change';
 import _ from 'lodash';
 import i18n from 'i18next';
 import parse from './parser.js';
@@ -76,7 +75,6 @@ const app = () => {
             const diffTitle = _.difference(newPosts.map((post) => post.title),
               oldPost.map((post) => post.title));
             if (diffTitle.length !== 0) {
-              // console.log(diffTitle);
               const addedPosts = newPosts.filter((post) => diffTitle.includes(post.title))
                 .map((i) => ({ ...i, id: _.uniqueId(), idFeed: feed.id }));
               watchedState.posts.unshift(...addedPosts);
@@ -87,7 +85,6 @@ const app = () => {
         Promise.all(promisesFeed)
           .finally(() => {
             setTimeout(() => {
-              // console.log('update');
               updateData();
             }, delayTime);
           });
@@ -106,14 +103,12 @@ const app = () => {
         watchedState.inputRSSForm.valid = true;
         watchedState.inputRSSForm.error = null;
         watchedState.inputRSSForm.process = 'sending';
-        // axios.get(`${proxyServ}${encodeURIComponent(url)}`)
         axios.get(buildURL(url))
           .then((response) => {
-            // handle success
             const content = parse(response.data.contents);
             writeData(content, url);
-            watchedState.inputRSSForm.process = 'accepted'; // success info?
-            updateData(); //  trying update
+            watchedState.inputRSSForm.process = 'accepted';
+            updateData();
           })
           .catch((err) => {
             if (err.isAxiosError) {

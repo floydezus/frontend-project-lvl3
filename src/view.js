@@ -12,7 +12,7 @@ const initView = (state, i18nInstance) => {
   const bodyModal = document.querySelector('.modal-body');
   const buttonModal = document.querySelector('.modal-footer .btn-primary');
 
-  const renderMessage = (element, messageType, isSuccess = true) => { // refactoring
+  const renderMessage = (element, messageType, isSuccess = true) => {
     const feedbackExist = divURL.querySelector('.feedback');
     const elementMessage = element;
     if (feedbackExist) {
@@ -82,7 +82,7 @@ const initView = (state, i18nInstance) => {
       listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
       groupListPosts.appendChild(listItem);
       const linkElem = document.createElement('a');
-      if (wState.ui.seenLinks.includes(id)) { // ????
+      if (wState.ui.seenLinks.includes(id)) {
         linkElem.classList.add('fw-normal');
         linkElem.classList.add('link-secondary');
       } else {
