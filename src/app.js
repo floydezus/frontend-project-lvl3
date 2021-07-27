@@ -32,14 +32,25 @@ const app = () => {
           error: null,
         },
         ui: {
-          seenLinks: [],
+          seenLinks: new Set(),
           dataModal: null,
         },
         processError: null,
         feeds: [],
         posts: [],
       };
-      const watchedState = initView(state, i18nInstance);
+      const elements = {};
+      elements.formSubmit = document.querySelector('.rss-form');
+      elements.submitButton = document.querySelector('button[type="submit"]');
+      elements.inputUrl = document.querySelector('#urlInput');
+      elements.divURL = document.querySelector('#divUrl');
+      elements.divFeeds = document.querySelector('.feeds');
+      elements.divPosts = document.querySelector('.posts');
+      elements.titleModal = document.querySelector('.modal-title');
+      elements.bodyModal = document.querySelector('.modal-body');
+      elements.buttonModal = document.querySelector('.modal-footer .btn-primary');
+
+      const watchedState = initView(state, i18nInstance, elements);
 
       const baseURLSchema = yup.string().required().url();
 
@@ -54,9 +65,7 @@ const app = () => {
         }
       };
 
-      const formSubmit = document.querySelector('.rss-form');
-
-      const writeData = (data, currentUrl) => {
+      const buildFeedAndPosts = (data, currentUrl) => {
         const { title, description, items } = data;
         const idFeed = _.uniqueId();
         watchedState.feeds.unshift({
@@ -90,7 +99,9 @@ const app = () => {
           });
       };
 
-      formSubmit.addEventListener('submit', (e) => {
+      updateData();
+
+      elements.formSubmit.addEventListener('submit', (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const url = formData.get('url');
@@ -106,9 +117,8 @@ const app = () => {
         axios.get(buildURL(url))
           .then((response) => {
             const content = parse(response.data.contents);
-            writeData(content, url);
+            buildFeedAndPosts(content, url);
             watchedState.inputRSSForm.process = 'accepted';
-            updateData();
           })
           .catch((err) => {
             if (err.isAxiosError) {

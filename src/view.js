@@ -2,15 +2,10 @@
 "ignorePropertyModificationsFor": ["wState"] }] */
 import onChange from 'on-change';
 
-const initView = (state, i18nInstance) => {
-  const submitButton = document.querySelector('button[type="submit"]');
-  const inputUrl = document.querySelector('#urlInput');
-  const divURL = document.querySelector('#divUrl');
-  const divFeeds = document.querySelector('.feeds');
-  const divPosts = document.querySelector('.posts');
-  const titleModal = document.querySelector('.modal-title');
-  const bodyModal = document.querySelector('.modal-body');
-  const buttonModal = document.querySelector('.modal-footer .btn-primary');
+const initView = (state, i18nInstance, elements) => {
+  const {
+    submitButton, inputUrl, divURL, divFeeds, divPosts, titleModal, bodyModal, buttonModal,
+  } = elements;
 
   const renderMessage = (element, messageType, isSuccess = true) => {
     const feedbackExist = divURL.querySelector('.feedback');
@@ -32,6 +27,7 @@ const initView = (state, i18nInstance) => {
       elementMessage.classList.add('is-invalid');
     }
     divURL.appendChild(feedbackElement);
+    inputUrl.focus();
   };
 
   const processStateHandler = (processState) => {
@@ -82,7 +78,7 @@ const initView = (state, i18nInstance) => {
       listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
       groupListPosts.appendChild(listItem);
       const linkElem = document.createElement('a');
-      if (wState.ui.seenLinks.includes(id)) {
+      if (wState.ui.seenLinks.has(id)) {
         linkElem.classList.add('fw-normal');
         linkElem.classList.add('link-secondary');
       } else {
@@ -94,7 +90,7 @@ const initView = (state, i18nInstance) => {
       listItem.appendChild(linkElem);
 
       linkElem.addEventListener('click', () => {
-        wState.ui.seenLinks.unshift(id);
+        wState.ui.seenLinks.add(id);
       });
 
       const buttonElem = document.createElement('button');
@@ -107,7 +103,7 @@ const initView = (state, i18nInstance) => {
 
       buttonElem.addEventListener('click', () => {
         wState.ui.dataModal = { title, description, link };
-        wState.ui.seenLinks.unshift(id);
+        wState.ui.seenLinks.add(id);
       });
     });
   };
@@ -147,7 +143,7 @@ const initView = (state, i18nInstance) => {
   };
 
   const renderSeenLink = (seenIds, wState) => {
-    const seenPosts = wState.posts.filter((post) => seenIds.includes(post.id));
+    const seenPosts = wState.posts.filter((post) => seenIds.has(post.id));
     seenPosts.forEach((post) => {
       const linkElem = divPosts.querySelector(`a[data-id="${post.id}"]`);
       linkElem.classList.remove('fw-bold');
@@ -192,6 +188,7 @@ const initView = (state, i18nInstance) => {
         break;
     }
   });
+  console.log(state);
   return watchedState;
 };
 
