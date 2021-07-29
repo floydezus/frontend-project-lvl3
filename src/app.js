@@ -17,10 +17,9 @@ const buildURL = (link) => {
 
 const app = () => {
   const delayTime = 5000;
-  const defaultLanguage = 'ru';
   const i18nInstance = i18n.createInstance();
   i18nInstance.init({
-    lng: defaultLanguage,
+    lng: 'ru',
     debug: false,
     resources,
   })
@@ -88,8 +87,7 @@ const app = () => {
                 .map((i) => ({ ...i, id: _.uniqueId(), idFeed: feed.id }));
               watchedState.posts.unshift(...addedPosts);
             }
-          })
-          .catch((err) => console.log(err)));
+          }));
 
         Promise.all(promisesFeed)
           .finally(() => {

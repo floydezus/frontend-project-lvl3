@@ -28,20 +28,20 @@
           <div class="col-md-10 col-lg-8 mx-auto text-black" id="divUrl">
             <h1 class="display-1">RSS агрегатор</h1>
             <p class="lead">Здесь может быть ваша реклама.</p>
-            <form class="rss-form">
+            <form class="rss-form text-body">
               <div class="row">
                   <div class="col">
                     <div class="form-floating">
-                        <input class="form-control" name="url" id="urlInput" placeholder="RSS link" aria-label="url">
-                        <label for="urlInput">RSS link</label>
-                        <small id="urlInputHelp" class="form-text text-muted">Пример: https://ru.hexlet.io/lessons.rss, http://lorem-rss.herokuapp.com/feed?unit=second&interval=5</small>
+                        <input class="form-control w-100" autofocus="" name="url" id="urlInput" placeholder="RSS link" aria-label="url">
+                        <label for="urlInput">RSS link</label>                        
                     </div>
                   </div>
                   <div class="col-auto">
-                      <button type="submit" aria-label="add" class="btn btn-lg btn-primary px-sm-5">Добавить</button>
+                      <button type="submit" aria-label="add" class="h-100 btn btn-lg btn-primary px-sm-5">Добавить</button>
                   </div>
               </div>
-            </form>            
+            </form>
+            <small id="urlInputHelp" class="form-text text-muted">Пример: https://ru.hexlet.io/lessons.rss, http://lorem-rss.herokuapp.com/feed?unit=second&interval=5</small>           
         </div>
       </section>
       <section class="container-fluid container-xxl p-5">
