@@ -4,30 +4,27 @@ import onChange from 'on-change';
 
 const initView = (state, i18nInstance, elements) => {
   const {
-    submitButton, inputUrl, divURL, divFeeds, divPosts, titleModal, bodyModal, buttonModal,
+    submitButton, inputUrl, elementFeedback, elementFeeds, elementPosts, titleModal,
+    bodyModal, buttonModal,
   } = elements;
 
-  const renderMessage = (element, messageType, isSuccess = true) => {
-    const feedbackExist = divURL.querySelector('.feedback');
+  const renderMessage = (element, feedback, messageType, typeResult = 'success') => {
     const elementMessage = element;
-    if (feedbackExist) {
-      feedbackExist.remove();
-      elementMessage.classList.remove('is-invalid');
-    }
-    const feedbackElement = document.createElement('div');
-    if (isSuccess) {
+    const feedbackElement = feedback;
+    feedbackElement.innerHTML = '';
+    feedbackElement.classList.remove('text-success', 'text-danger');
+    element.classList.remove('is-invalid');
+    if (typeResult === 'success') {
       const message = i18nInstance.t(`messages.${messageType}`);
-      feedbackElement.classList.add('feedback', 'text-success', 'position-absolute', 'small');
+      feedbackElement.classList.add('text-success');
       feedbackElement.innerHTML = message;
     } else {
-      console.log(messageType);
       const errorMessage = i18nInstance.t([`messages.errors.${messageType}`, 'messages.errors.undefined']);
-      feedbackElement.classList.add('feedback', 'text-danger', 'position-absolute', 'small');
+      feedbackElement.classList.add('text-danger');
       feedbackElement.innerHTML = errorMessage;
       elementMessage.classList.add('is-invalid');
     }
-    divURL.appendChild(feedbackElement);
-    inputUrl.focus();
+    element.focus();
   };
 
   const processStateHandler = (processState) => {
@@ -43,7 +40,7 @@ const initView = (state, i18nInstance, elements) => {
         submitButton.disabled = false;
         inputUrl.removeAttribute('readonly');
         inputUrl.value = '';
-        renderMessage(inputUrl, 'success.add');
+        renderMessage(inputUrl, elementFeedback, 'success.add', 'success');
         break;
       case 'sending':
         submitButton.disabled = true;
@@ -145,7 +142,7 @@ const initView = (state, i18nInstance, elements) => {
   const renderSeenLink = (seenIds, wState) => {
     const seenPosts = wState.posts.filter((post) => seenIds.has(post.id));
     seenPosts.forEach((post) => {
-      const linkElem = divPosts.querySelector(`a[data-id="${post.id}"]`);
+      const linkElem = elementPosts.querySelector(`a[data-id="${post.id}"]`);
       linkElem.classList.remove('fw-bold');
       linkElem.classList.add('fw-normal');
       linkElem.classList.add('link-secondary');
@@ -161,10 +158,10 @@ const initView = (state, i18nInstance, elements) => {
   const watchedState = onChange(state, (path, value) => {
     switch (path) {
       case 'inputRSSForm.error':
-        renderMessage(inputUrl, value, false);
+        renderMessage(inputUrl, elementFeedback, value, 'error');
         break;
       case 'processError':
-        renderMessage(inputUrl, value, false);
+        renderMessage(inputUrl, elementFeedback, value, 'error');
         break;
       case 'inputRSSForm.valid':
         submitButton.disabled = false;
@@ -173,10 +170,10 @@ const initView = (state, i18nInstance, elements) => {
         processStateHandler(value);
         break;
       case 'feeds':
-        renderFeeds(value, divFeeds);
+        renderFeeds(value, elementFeeds);
         break;
       case 'posts':
-        renderPosts(value, divPosts, watchedState);
+        renderPosts(value, elementPosts, watchedState);
         break;
       case 'ui.seenLinks':
         renderSeenLink(value, watchedState);
@@ -188,7 +185,6 @@ const initView = (state, i18nInstance, elements) => {
         break;
     }
   });
-  console.log(state);
   return watchedState;
 };
 

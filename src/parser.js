@@ -12,10 +12,10 @@ export default (data) => {
   const descriptionElement = doc.querySelector('description');
   const description = descriptionElement.textContent;
   const itemsElement = [...doc.querySelectorAll('item')];
-  const items = itemsElement.map((i) => {
-    const titleEl = i.querySelector('title');
-    const descriptionEl = i.querySelector('description');
-    const linkEl = i.querySelector('link');
+  const items = itemsElement.map((item) => {
+    const titleEl = item.querySelector('title');
+    const descriptionEl = item.querySelector('description');
+    const linkEl = item.querySelector('link');
     return {
       title: titleEl.textContent,
       description: descriptionEl.textContent,

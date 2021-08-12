@@ -7,9 +7,9 @@ import parse from './parser.js';
 import resources from './locales';
 import initView from './view.js';
 
-const buildURL = (link) => {
-  const path = 'https://hexlet-allorigins.herokuapp.com/get';
-  const buildedUrl = new URL(path);
+const addProxyToLink = (link) => {
+  const proxy = 'https://hexlet-allorigins.herokuapp.com/get';
+  const buildedUrl = new URL(proxy);
   buildedUrl.searchParams.set('disableCache', true);
   buildedUrl.searchParams.set('url', link);
   return buildedUrl;
@@ -39,12 +39,12 @@ const app = () => {
         posts: [],
       };
       const elements = {};
-      elements.formSubmit = document.querySelector('.rss-form');
+      elements.formRSS = document.querySelector('.rss-form');
       elements.submitButton = document.querySelector('button[type="submit"]');
       elements.inputUrl = document.querySelector('#urlInput');
-      elements.divURL = document.querySelector('#divUrl');
-      elements.divFeeds = document.querySelector('.feeds');
-      elements.divPosts = document.querySelector('.posts');
+      elements.elementFeedback = document.querySelector('.feedback');
+      elements.elementFeeds = document.querySelector('.feeds');
+      elements.elementPosts = document.querySelector('.posts');
       elements.titleModal = document.querySelector('.modal-title');
       elements.bodyModal = document.querySelector('.modal-body');
       elements.buttonModal = document.querySelector('.modal-footer .btn-primary');
@@ -75,19 +75,20 @@ const app = () => {
       };
 
       const updateData = () => {
-        const promisesFeed = watchedState.feeds.map((feed) => axios.get(buildURL(feed.url))
+        const promisesFeed = watchedState.feeds.map((feed) => axios.get(addProxyToLink(feed.url))
           .then((response) => {
             const feedData = parse(response.data.contents);
             const newPosts = feedData.items;
-            const oldPost = watchedState.posts.filter((el) => el.idFeed === feed.id);
-            const diffTitle = _.difference(newPosts.map((post) => post.title),
-              oldPost.map((post) => post.title));
+            const oldPosts = watchedState.posts.filter((el) => el.idFeed === feed.id);
+            const diffTitle = _.differenceWith(newPosts.map((post) => post.title),
+              oldPosts.map((post) => post.title), _.isEqual);
             if (diffTitle.length !== 0) {
               const addedPosts = newPosts.filter((post) => diffTitle.includes(post.title))
                 .map((i) => ({ ...i, id: _.uniqueId(), idFeed: feed.id }));
               watchedState.posts.unshift(...addedPosts);
             }
-          }));
+          })
+          .catch((err) => err));
 
         Promise.all(promisesFeed)
           .finally(() => {
@@ -99,7 +100,7 @@ const app = () => {
 
       updateData();
 
-      elements.formSubmit.addEventListener('submit', (e) => {
+      elements.formRSS.addEventListener('submit', (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const url = formData.get('url');
@@ -112,7 +113,7 @@ const app = () => {
         watchedState.inputRSSForm.valid = true;
         watchedState.inputRSSForm.error = null;
         watchedState.inputRSSForm.process = 'sending';
-        axios.get(buildURL(url))
+        axios.get(addProxyToLink(url))
           .then((response) => {
             const content = parse(response.data.contents);
             buildFeedAndPosts(content, url);
