@@ -1,13 +1,9 @@
+/* eslint-disable no-param-reassign */
 /* eslint no-param-reassign: ["error", { "props": true,
 "ignorePropertyModificationsFor": ["wState"] }] */
 import onChange from 'on-change';
 
 const initView = (state, i18nInstance, elements) => {
-  const {
-    submitButton, inputUrl, elementFeedback, elementFeeds, elementPosts, titleModal,
-    bodyModal, buttonModal,
-  } = elements;
-
   const renderMessage = (element, feedback, messageType, typeResult = 'success') => {
     const elementMessage = element;
     const feedbackElement = feedback;
@@ -24,27 +20,27 @@ const initView = (state, i18nInstance, elements) => {
       feedbackElement.innerHTML = errorMessage;
       elementMessage.classList.add('is-invalid');
     }
-    element.focus();
   };
 
   const processStateHandler = (processState) => {
     switch (processState) {
       case 'failed':
-        submitButton.disabled = false;
-        inputUrl.removeAttribute('readonly');
+        elements.submitButton.disabled = false;
+        elements.inputUrl.removeAttribute('readonly');
         break;
       case 'filling':
-        submitButton.disabled = false;
+        elements.submitButton.disabled = false;
         break;
       case 'accepted':
-        submitButton.disabled = false;
-        inputUrl.removeAttribute('readonly');
-        inputUrl.value = '';
-        renderMessage(inputUrl, elementFeedback, 'success.add', 'success');
+        elements.submitButton.disabled = false;
+        elements.inputUrl.removeAttribute('readonly');
+        elements.inputUrl.value = '';
+        renderMessage(elements.inputUrl, elements.elementFeedback, 'success.add', 'success');
         break;
       case 'sending':
-        submitButton.disabled = true;
-        inputUrl.setAttribute('readonly', true);
+        elements.submitButton.disabled = true;
+        elements.inputUrl.setAttribute('readonly', true);
+        elements.inputUrl.focus();
         break;
       default:
         throw new Error(`Unknown state: ${processState}`);
@@ -75,7 +71,7 @@ const initView = (state, i18nInstance, elements) => {
       listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
       groupListPosts.appendChild(listItem);
       const linkElem = document.createElement('a');
-      if (wState.ui.seenLinks.has(id)) {
+      if (wState.ui.seenPosts.has(id)) {
         linkElem.classList.add('fw-normal');
         linkElem.classList.add('link-secondary');
       } else {
@@ -87,7 +83,7 @@ const initView = (state, i18nInstance, elements) => {
       listItem.appendChild(linkElem);
 
       linkElem.addEventListener('click', () => {
-        wState.ui.seenLinks.add(id);
+        wState.ui.seenPosts.add(id);
       });
 
       const buttonElem = document.createElement('button');
@@ -100,7 +96,7 @@ const initView = (state, i18nInstance, elements) => {
 
       buttonElem.addEventListener('click', () => {
         wState.ui.dataModal = { title, description, link };
-        wState.ui.seenLinks.add(id);
+        wState.ui.seenPosts.add(id);
       });
     });
   };
@@ -139,44 +135,35 @@ const initView = (state, i18nInstance, elements) => {
     });
   };
 
-  const renderSeenLink = (seenIds, wState) => {
-    const seenPosts = wState.posts.filter((post) => seenIds.has(post.id));
-    seenPosts.forEach((post) => {
-      const linkElem = elementPosts.querySelector(`a[data-id="${post.id}"]`);
-      linkElem.classList.remove('fw-bold');
-      linkElem.classList.add('fw-normal');
-      linkElem.classList.add('link-secondary');
-    });
+  const renderSeenPosts = (wState) => {
+    renderPosts(wState.posts, elements.elementPosts, wState);
   };
 
   const renderModal = (data) => {
-    titleModal.textContent = data.title;
-    bodyModal.textContent = data.description;
-    buttonModal.setAttribute('href', data.link);
+    elements.titleModal.textContent = data.title;
+    elements.bodyModal.textContent = data.description;
+    elements.buttonModal.setAttribute('href', data.link);
   };
 
   const watchedState = onChange(state, (path, value) => {
     switch (path) {
       case 'inputRSSForm.error':
-        renderMessage(inputUrl, elementFeedback, value, 'error');
+        renderMessage(elements.inputUrl, elements.elementFeedback, value, 'error');
         break;
       case 'processError':
-        renderMessage(inputUrl, elementFeedback, value, 'error');
-        break;
-      case 'inputRSSForm.valid':
-        submitButton.disabled = false;
+        renderMessage(elements.inputUrl, elements.elementFeedback, value, 'error');
         break;
       case 'inputRSSForm.process':
         processStateHandler(value);
         break;
       case 'feeds':
-        renderFeeds(value, elementFeeds);
+        renderFeeds(value, elements.elementFeeds);
         break;
       case 'posts':
-        renderPosts(value, elementPosts, watchedState);
+        renderPosts(value, elements.elementPosts, watchedState);
         break;
-      case 'ui.seenLinks':
-        renderSeenLink(value, watchedState);
+      case 'ui.seenPosts':
+        renderSeenPosts(watchedState);
         break;
       case 'ui.dataModal':
         renderModal(value);

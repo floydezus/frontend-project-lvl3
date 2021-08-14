@@ -26,12 +26,11 @@ const app = () => {
     .then(() => {
       const state = {
         inputRSSForm: {
-          valid: false,
           process: 'filling',
           error: null,
         },
         ui: {
-          seenLinks: new Set(),
+          seenPosts: new Set(),
           dataModal: null,
         },
         processError: null,
@@ -56,6 +55,15 @@ const app = () => {
       const validateURL = (url, feeds) => {
         const urls = feeds.map((el) => el.url);
         const currentURLSchema = baseURLSchema.notOneOf(urls);
+        // currentURLSchema.validate(url)
+        //   .then((value) => {
+        //     console.log(`Validate = ${value}`);
+        //     return null;
+        //   })
+        //   .catch((err) => {
+        //     console.log(`Error Type = ${err.type}`);
+        //     return err.type;
+        //   });
         try {
           currentURLSchema.validateSync(url);
           return null;
@@ -80,15 +88,16 @@ const app = () => {
             const feedData = parse(response.data.contents);
             const newPosts = feedData.items;
             const oldPosts = watchedState.posts.filter((el) => el.idFeed === feed.id);
-            const diffTitle = _.differenceWith(newPosts.map((post) => post.title),
-              oldPosts.map((post) => post.title), _.isEqual);
-            if (diffTitle.length !== 0) {
-              const addedPosts = newPosts.filter((post) => diffTitle.includes(post.title))
+            const diffPosts = _.differenceWith(newPosts, oldPosts, (x, y) => (x.title === y.title));
+            if (diffPosts.length > 0) {
+              const addedPosts = diffPosts
                 .map((i) => ({ ...i, id: _.uniqueId(), idFeed: feed.id }));
               watchedState.posts.unshift(...addedPosts);
             }
           })
-          .catch((err) => err));
+          .catch((err) => {
+            console.log(err);
+          }));
 
         Promise.all(promisesFeed)
           .finally(() => {
@@ -105,12 +114,11 @@ const app = () => {
         const formData = new FormData(e.target);
         const url = formData.get('url');
         const error = validateURL(url, watchedState.feeds);
+        console.log(`Error after validate = ${error}`);
         if (error) {
           watchedState.inputRSSForm.error = error;
-          watchedState.inputRSSForm.valid = false;
           return;
         }
-        watchedState.inputRSSForm.valid = true;
         watchedState.inputRSSForm.error = null;
         watchedState.inputRSSForm.process = 'sending';
         axios.get(addProxyToLink(url))
