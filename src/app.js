@@ -25,7 +25,7 @@ const app = () => {
   })
     .then(() => {
       const state = {
-        inputRSSForm: {
+        mainForm: {
           process: 'filling',
           error: null,
         },
@@ -41,9 +41,9 @@ const app = () => {
       elements.formRSS = document.querySelector('.rss-form');
       elements.submitButton = document.querySelector('button[type="submit"]');
       elements.inputUrl = document.querySelector('#urlInput');
-      elements.elementFeedback = document.querySelector('.feedback');
-      elements.elementFeeds = document.querySelector('.feeds');
-      elements.elementPosts = document.querySelector('.posts');
+      elements.feedback = document.querySelector('.feedback');
+      elements.feeds = document.querySelector('.feeds');
+      elements.posts = document.querySelector('.posts');
       elements.titleModal = document.querySelector('.modal-title');
       elements.bodyModal = document.querySelector('.modal-body');
       elements.buttonModal = document.querySelector('.modal-footer .btn-primary');
@@ -55,21 +55,7 @@ const app = () => {
       const validateURL = (url, feeds) => {
         const urls = feeds.map((el) => el.url);
         const currentURLSchema = baseURLSchema.notOneOf(urls);
-        // currentURLSchema.validate(url)
-        //   .then((value) => {
-        //     console.log(`Validate = ${value}`);
-        //     return null;
-        //   })
-        //   .catch((err) => {
-        //     console.log(`Error Type = ${err.type}`);
-        //     return err.type;
-        //   });
-        try {
-          currentURLSchema.validateSync(url);
-          return null;
-        } catch (err) {
-          return err.type;
-        }
+        return currentURLSchema.validate(url).then(() => null).catch((err) => err.type);
       };
 
       const buildFeedAndPosts = (data, currentUrl) => {
@@ -78,7 +64,7 @@ const app = () => {
         watchedState.feeds.unshift({
           id: idFeed, title, description, url: currentUrl,
         });
-        const posts = items.map((i) => ({ ...i, id: _.uniqueId(), idFeed }));
+        const posts = items.map((item) => ({ ...item, id: _.uniqueId(), idFeed }));
         watchedState.posts.unshift(...posts);
       };
 
@@ -91,7 +77,7 @@ const app = () => {
             const diffPosts = _.differenceWith(newPosts, oldPosts, (x, y) => (x.title === y.title));
             if (diffPosts.length > 0) {
               const addedPosts = diffPosts
-                .map((i) => ({ ...i, id: _.uniqueId(), idFeed: feed.id }));
+                .map((item) => ({ ...item, id: _.uniqueId(), idFeed: feed.id }));
               watchedState.posts.unshift(...addedPosts);
             }
           })
@@ -113,29 +99,33 @@ const app = () => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const url = formData.get('url');
-        const error = validateURL(url, watchedState.feeds);
-        console.log(`Error after validate = ${error}`);
-        if (error) {
-          watchedState.inputRSSForm.error = error;
-          return;
-        }
-        watchedState.inputRSSForm.error = null;
-        watchedState.inputRSSForm.process = 'sending';
-        axios.get(addProxyToLink(url))
-          .then((response) => {
-            const content = parse(response.data.contents);
-            buildFeedAndPosts(content, url);
-            watchedState.inputRSSForm.process = 'accepted';
-          })
-          .catch((err) => {
-            if (err.isAxiosError) {
-              watchedState.processError = 'network';
-            }
-            if (err.isParsingError) {
-              watchedState.processError = 'parsing';
-            }
-            watchedState.inputRSSForm.process = 'failed';
-          });
+
+        validateURL(url, watchedState.feeds).then((error) => {
+          if (error) {
+            watchedState.mainForm.error = error;
+            return;
+          }
+          watchedState.mainForm.error = null;
+          watchedState.mainForm.process = 'sending';
+          axios.get(addProxyToLink(url))
+            .then((response) => {
+              const content = parse(response.data.contents);
+              buildFeedAndPosts(content, url);
+              watchedState.mainForm.process = 'accepted';
+            })
+            .catch((err) => {
+              if (err.isAxiosError) {
+                watchedState.processError = 'network';
+              }
+              if (err.isParsingError) {
+                watchedState.processError = 'parsing';
+              }
+              watchedState.mainForm.process = 'failed';
+            })
+            .finally(() => {
+              watchedState.mainForm.process = 'filling';
+            });
+        });
       });
     });
 };

@@ -4,55 +4,62 @@
 import onChange from 'on-change';
 
 const initView = (state, i18nInstance, elements) => {
-  const renderMessage = (element, feedback, messageType, typeResult = 'success') => {
-    const elementMessage = element;
-    const feedbackElement = feedback;
-    feedbackElement.innerHTML = '';
-    feedbackElement.classList.remove('text-success', 'text-danger');
-    element.classList.remove('is-invalid');
-    if (typeResult === 'success') {
-      const message = i18nInstance.t(`messages.${messageType}`);
-      feedbackElement.classList.add('text-success');
-      feedbackElement.innerHTML = message;
-    } else {
-      const errorMessage = i18nInstance.t([`messages.errors.${messageType}`, 'messages.errors.undefined']);
-      feedbackElement.classList.add('text-danger');
-      feedbackElement.innerHTML = errorMessage;
-      elementMessage.classList.add('is-invalid');
+  const renderMessage = (messageKey, type = 'success') => {
+    const { feedback, inputUrl } = elements;
+    feedback.innerHTML = '';
+    feedback.classList.remove('text-success', 'text-danger');
+    inputUrl.classList.remove('is-invalid');
+    if (messageKey === null) {
+      return;
+    }
+    switch (type) {
+      case 'success':
+        feedback.classList.add('text-success');
+        feedback.innerHTML = i18nInstance.t(`messages.${messageKey}`);
+        break;
+      case 'error':
+        feedback.classList.add('text-danger');
+        feedback.innerHTML = i18nInstance.t([`messages.errors.${messageKey}`, 'messages.errors.undefined']);
+        inputUrl.classList.add('is-invalid');
+        break;
+      default:
+        throw new Error(`Unknown type message: ${type}`);
     }
   };
 
   const processStateHandler = (processState) => {
+    const { submitButton, inputUrl } = elements;
     switch (processState) {
       case 'failed':
-        elements.submitButton.disabled = false;
-        elements.inputUrl.removeAttribute('readonly');
+        submitButton.disabled = false;
+        inputUrl.removeAttribute('readonly');
         break;
       case 'filling':
-        elements.submitButton.disabled = false;
+        submitButton.disabled = false;
+        inputUrl.focus();
         break;
       case 'accepted':
-        elements.submitButton.disabled = false;
-        elements.inputUrl.removeAttribute('readonly');
-        elements.inputUrl.value = '';
-        renderMessage(elements.inputUrl, elements.elementFeedback, 'success.add', 'success');
+        submitButton.disabled = false;
+        inputUrl.removeAttribute('readonly');
+        inputUrl.value = '';
+        renderMessage('success.add', 'success');
         break;
       case 'sending':
-        elements.submitButton.disabled = true;
-        elements.inputUrl.setAttribute('readonly', true);
-        elements.inputUrl.focus();
+        submitButton.disabled = true;
+        inputUrl.setAttribute('readonly', true);
         break;
       default:
         throw new Error(`Unknown state: ${processState}`);
     }
   };
 
-  const renderPosts = (posts, rootEl, wState) => {
-    const rootPosts = rootEl;
-    rootPosts.innerHTML = '';
+  const renderPosts = (wState) => {
+    const { posts: postsBox } = elements;
+    const { posts } = wState;
+    postsBox.innerHTML = '';
     const cardPosts = document.createElement('div');
     cardPosts.classList.add('card', 'border-0');
-    rootPosts.appendChild(cardPosts);
+    postsBox.appendChild(cardPosts);
     const bodyPosts = document.createElement('div');
     bodyPosts.classList.add('card-body');
     cardPosts.appendChild(bodyPosts);
@@ -101,8 +108,8 @@ const initView = (state, i18nInstance, elements) => {
     });
   };
 
-  const renderFeeds = (feeds, rootEl) => {
-    const rootFeeds = rootEl;
+  const renderFeeds = (feeds) => {
+    const { feeds: rootFeeds } = elements;
     rootFeeds.innerHTML = '';
     const cardFeeds = document.createElement('div');
     cardFeeds.classList.add('card', 'border-0');
@@ -135,35 +142,32 @@ const initView = (state, i18nInstance, elements) => {
     });
   };
 
-  const renderSeenPosts = (wState) => {
-    renderPosts(wState.posts, elements.elementPosts, wState);
-  };
-
   const renderModal = (data) => {
-    elements.titleModal.textContent = data.title;
-    elements.bodyModal.textContent = data.description;
-    elements.buttonModal.setAttribute('href', data.link);
+    const { titleModal, bodyModal, buttonModal } = elements;
+    titleModal.textContent = data.title;
+    bodyModal.textContent = data.description;
+    buttonModal.setAttribute('href', data.link);
   };
 
   const watchedState = onChange(state, (path, value) => {
     switch (path) {
-      case 'inputRSSForm.error':
-        renderMessage(elements.inputUrl, elements.elementFeedback, value, 'error');
+      case 'mainForm.error':
+        renderMessage(value, 'error');
         break;
       case 'processError':
-        renderMessage(elements.inputUrl, elements.elementFeedback, value, 'error');
+        renderMessage(value, 'error');
         break;
-      case 'inputRSSForm.process':
+      case 'mainForm.process':
         processStateHandler(value);
         break;
       case 'feeds':
-        renderFeeds(value, elements.elementFeeds);
+        renderFeeds(value);
         break;
       case 'posts':
-        renderPosts(value, elements.elementPosts, watchedState);
+        renderPosts(watchedState);
         break;
       case 'ui.seenPosts':
-        renderSeenPosts(watchedState);
+        renderPosts(watchedState);
         break;
       case 'ui.dataModal':
         renderModal(value);
