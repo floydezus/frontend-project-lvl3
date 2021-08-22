@@ -9,3 +9,26 @@
 
 ### Githib-Actions:
 ![Node CI](https://github.com/floydezus/frontend-project-lvl3/actions/workflows/nodejs.yml/badge.svg)
+
+https://rss-floydezus.vercel.app/
+
+---
+
+### 1. Install dependencies:
+
+```
+$ make install
+```
+### 2. Run dev-server:
+
+```
+$ make develop
+```
+### 3. Build project:
+
+```
+$ make build
+```
+---
+### Simple RSS-reader.
+#### Project objective - create an RSS feed with automatic updates.
