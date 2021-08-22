@@ -6,4 +6,4 @@
 [![Test Coverage](https://api.codeclimate.com/v1/badges/83674ae8ebf2471e9815/test_coverage)](https://codeclimate.com/github/floydezus/frontend-project-lvl3/test_coverage)
 
 ### Vercel:
-![Vercel](https://vercelbadge.vercel.app/api/floydezus/rss)
+[![Vercel](https://vercelbadge.vercel.app/api/floydezus/rss)
