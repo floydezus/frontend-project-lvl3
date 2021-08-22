@@ -25,7 +25,7 @@ const app = () => {
   })
     .then(() => {
       const state = {
-        mainForm: {
+        form: {
           process: 'filling',
           error: null,
         },
@@ -102,16 +102,16 @@ const app = () => {
 
         validateURL(url, watchedState.feeds).then((error) => {
           if (error) {
-            watchedState.mainForm.error = error;
+            watchedState.form.error = error;
             return;
           }
-          watchedState.mainForm.error = null;
-          watchedState.mainForm.process = 'sending';
+          watchedState.form.error = null;
+          watchedState.form.process = 'sending';
           axios.get(addProxyToLink(url))
             .then((response) => {
               const content = parse(response.data.contents);
               buildFeedAndPosts(content, url);
-              watchedState.mainForm.process = 'accepted';
+              watchedState.form.process = 'accepted';
             })
             .catch((err) => {
               if (err.isAxiosError) {
@@ -120,10 +120,10 @@ const app = () => {
               if (err.isParsingError) {
                 watchedState.processError = 'parsing';
               }
-              watchedState.mainForm.process = 'failed';
+              watchedState.form.process = 'failed';
             })
             .finally(() => {
-              watchedState.mainForm.process = 'filling';
+              watchedState.form.process = 'filling';
             });
         });
       });

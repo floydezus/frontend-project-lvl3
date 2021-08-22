@@ -87,6 +87,7 @@ const initView = (state, i18nInstance, elements) => {
       linkElem.href = link;
       linkElem.textContent = title;
       linkElem.setAttribute('data-id', id);
+      linkElem.setAttribute('target', '_blanc');
       listItem.appendChild(linkElem);
 
       linkElem.addEventListener('click', () => {
@@ -151,13 +152,13 @@ const initView = (state, i18nInstance, elements) => {
 
   const watchedState = onChange(state, (path, value) => {
     switch (path) {
-      case 'mainForm.error':
+      case 'form.error':
         renderMessage(value, 'error');
         break;
       case 'processError':
         renderMessage(value, 'error');
         break;
-      case 'mainForm.process':
+      case 'form.process':
         processStateHandler(value);
         break;
       case 'feeds':
