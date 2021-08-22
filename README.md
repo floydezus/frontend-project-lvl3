@@ -7,4 +7,5 @@
 ### Vercel:
 ![Vercel](https://vercelbadge.vercel.app/api/floydezus/frontend-project-lvl3)
 
+### Githib-Actions:
 ![Node CI](https://github.com/floydezus/frontend-project-lvl3/actions/workflows/nodejs.yml/badge.svg)
